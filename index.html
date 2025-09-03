@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOEIC®︎ Listening 解答用紙</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .answer-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid #d1d5db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .answer-circle.selected {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+        .part-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .part-divider {
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            border-top: 1px dashed #e5e7eb;
+        }
+        .question-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .question-number {
+            font-weight: 500;
+            color: #4b5563;
+            min-width: 3rem;
+            text-align: right;
+            padding-right: 0.5rem;
+        }
+        .options-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .group-container {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .group-title {
+            font-weight: bold;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+
+    <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg">
+        <h1 class="text-center text-3xl font-bold text-gray-800 mb-4">TOEIC®︎ Listening 解答用紙</h1>
+        
+        <form id="answer-sheet">
+            <!-- Part 1 -->
+            <h2 class="part-title">Part 1 (6問)</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+                <!-- Question 1-6 -->
+                <div id="part1"></div>
+            </div>
+
+            <!-- Part 2 -->
+            <hr class="part-divider">
+            <h2 class="part-title">Part 2 (25問)</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+                <!-- Question 7-31 -->
+                <div id="part2"></div>
+            </div>
+
+            <!-- Part 3 -->
+            <hr class="part-divider">
+            <h2 class="part-title">Part 3 (39問)</h2>
+            <div id="part3"></div>
+
+            <!-- Part 4 -->
+            <hr class="part-divider">
+            <h2 class="part-title">Part 4 (30問)</h2>
+            <div id="part4"></div>
+        </form>
+
+        <div class="flex justify-center mt-6">
+            <button id="clear-answers-btn" class="bg-yellow-500 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-yellow-600 transition">回答を消去</button>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const clearAnswersBtn = document.getElementById('clear-answers-btn');
+            const part1Container = document.getElementById('part1');
+            const part2Container = document.getElementById('part2');
+            const part3Container = document.getElementById('part3');
+            const part4Container = document.getElementById('part4');
+            
+            // 回答用紙を生成する関数
+            function generateAnswerSheet() {
+                // Part 1
+                part1Container.innerHTML = '';
+                for (let i = 1; i <= 6; i++) {
+                    part1Container.innerHTML += createQuestionRow(i, ['A', 'B', 'C', 'D']);
+                }
+
+                // Part 2
+                part2Container.innerHTML = '';
+                for (let i = 7; i <= 31; i++) {
+                    part2Container.innerHTML += createQuestionRow(i, ['A', 'B', 'C']);
+                }
+
+                // Part 3
+                part3Container.innerHTML = '';
+                for (let i = 32; i <= 70; i += 3) {
+                    part3Container.innerHTML += createQuestionGroup(i, 3, ['A', 'B', 'C', 'D']);
+                }
+
+                // Part 4
+                part4Container.innerHTML = '';
+                for (let i = 71; i <= 100; i += 3) {
+                    part4Container.innerHTML += createQuestionGroup(i, 3, ['A', 'B', 'C', 'D']);
+                }
+
+                // イベントリスナーを再設定
+                document.querySelectorAll('.answer-circle').forEach(circle => {
+                    circle.addEventListener('click', handleAnswerClick);
+                });
+            }
+
+            // 1問分のHTMLを生成
+            function createQuestionRow(number, options) {
+                let optionsHtml = options.map(option => `
+                    <div class="answer-circle text-gray-500 hover:bg-gray-200" data-question="${number}" data-answer="${option}">${option}</div>
+                `).join('');
+                return `
+                    <div class="question-row items-center">
+                        <span class="question-number">${number}.</span>
+                        <div class="options-container">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 3問1セットのHTMLを生成
+            function createQuestionGroup(startNumber, count, options) {
+                let questionsHtml = '';
+                for (let i = 0; i < count; i++) {
+                    questionsHtml += createQuestionRow(startNumber + i, options);
+                }
+                return `
+                    <div class="group-container mb-4">
+                        <div class="group-title">設問 ${startNumber}-${startNumber + count - 1}</div>
+                        ${questionsHtml}
+                    </div>
+                `;
+            }
+
+            // 回答選択時の処理
+            function handleAnswerClick(event) {
+                const selectedCircle = event.target;
+                const questionNumber = selectedCircle.dataset.question;
+                const parentDiv = selectedCircle.closest('.options-container');
+
+                // 同じ問題の他の選択肢の選択を解除
+                parentDiv.querySelectorAll('.answer-circle').forEach(circle => {
+                    circle.classList.remove('selected');
+                });
+
+                // 新しい選択肢を選択状態にする
+                selectedCircle.classList.add('selected');
+            }
+
+            // 回答のみを消去する関数
+            function clearAnswers() {
+                document.querySelectorAll('.answer-circle').forEach(circle => {
+                    circle.classList.remove('selected');
+                });
+            }
+
+            // イベントリスナー設定
+            clearAnswersBtn.addEventListener('click', clearAnswers);
+
+            // アプリ起動時に回答用紙を生成
+            generateAnswerSheet();
+        });
+    </script>
+</body>
+</html>
